@@ -1036,6 +1036,31 @@ public class MapToolLineParser {
 							if (testMatcher.find()) {
 								rollBranch = testMatcher.group(1);
 							} else {
+
+								// ugly hack, but handles deeper nesting
+
+								testMatcher = Pattern.compile("^\\s*"+branchRegex).matcher(roll);
+
+								if (testMatcher.find()) {
+									String rollBranchPartial = testMatcher.group(1);
+									int left_bracket = countMatches(rollBranchPartial, "[");
+									int missing = left_bracket;
+									if (missing > 0) {
+										while (missing > 0 && roll.length() > rollBranchPartial.length()) {
+											int right_bracket = countMatches(rollBranchPartial, "]");
+											missing = left_bracket - right_bracket;
+											rollBranchPartial += roll.charAt(rollBranchPartial.length());
+
+										}
+										if (missing == 0) {
+											rollBranch = rollBranchPartial;
+											break;
+										}
+									}
+
+								}
+
+
 								throw doError("lineParser.errorBodyRoll", opts, roll);
 							}
 							break;
@@ -1055,7 +1080,37 @@ public class MapToolLineParser {
 									rollBranch = "''"; // quick-and-dirty way to get no output
 								rollBranch = rollBranch.trim();
 							} else {
-								throw doError("lineParser.ifError", opts, roll);
+								// ugly hack, but handles deeper nesting
+
+								testRegex = String.format("^\\s*%s\\s*(?:%s\\s*%s\\s*%s)?\\s*", branchRegex, branchSepRegex, branchRegex, branchLastSepRegex);
+								testMatcher = Pattern.compile(testRegex).matcher(roll);
+								if (testMatcher.find()) {
+									String rollBranchPartial = testMatcher.group(1);
+									int left_bracket = countMatches(rollBranchPartial, "[");
+									int left_brace = countMatches(rollBranchPartial, "{");
+									int missing_bracket = left_bracket;
+									int missing_brace = left_brace;
+									if (missing_bracket > 0 || missing_brace > 0) {
+										while ((missing_bracket > 0 || missing_brace > 0) && roll.length() > rollBranchPartial.length()) {
+											int right_bracket = countMatches(rollBranchPartial, "]");
+											int right_brace = countMatches(rollBranchPartial, "}");
+											missing_bracket = left_bracket - right_bracket;
+											missing_brace = left_brace - right_brace;
+											rollBranchPartial += roll.charAt(rollBranchPartial.length() - 1);
+										}
+										if (missing_bracket == 0 && missing_brace == 0) {
+											rollBranch = rollBranchPartial.trim();
+											break;
+										}
+									}
+									else {
+										throw doError("lineParser.ifError", opts, roll);
+									}
+								}
+
+
+
+
 							}
 							break;
 						}
@@ -1917,6 +1972,20 @@ public class MapToolLineParser {
 
 	public int getContextStackSize() {
 		return contextStack.size();
+	}
+
+	public static int countMatches(String mainstring, String substring) {
+		Matcher matcher = Pattern.compile(substring, Pattern.LITERAL).matcher(mainstring);
+
+		int count = 0;
+		int pos = 0;
+		while (matcher.find(pos))
+		{
+			count++;
+			pos = matcher.start() + 1;
+		}
+
+		return count;
 	}
 
 }
