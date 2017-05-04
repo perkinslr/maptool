@@ -14,8 +14,13 @@ package net.rptools.maptool.client.script.javascript.api;
 
 import net.rptools.maptool.model.Token;
 
+import java.util.Iterator;
+import java.util.Set;
+
 public class JSAPIToken {
 	private final Token token;
+	private Set<String> names;
+	private Iterator<String> names_iter;
 
 	public JSAPIToken(Token token) {
 		this.token = token;
@@ -40,4 +45,27 @@ public class JSAPIToken {
 	public String toString() {
 		return "Token(id=" + token.getId() + ")";
 	}
+
+	public void iteratePropertyNames() {
+		names = this.token.getPropertyNames();
+		names_iter = names.iterator();
+	}
+
+
+	public String getNextName() {
+		if (names_iter.hasNext()) {
+			return names_iter.next();
+		}
+		return "";
+
+	}
+
+	public String getId() {
+		return "" + token.getId();
+	}
+
+	public String getProperty(String name) {
+		return "" + this.token.getProperty(name);
+	}
+
 }
