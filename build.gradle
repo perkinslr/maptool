@@ -4,6 +4,7 @@
 */
 import org.gradle.plugins.ide.eclipse.model.AccessRule
 
+
 buildscript {
     dependencies {
         classpath "com.diffplug.spotless:spotless-plugin-gradle:3.27.1"
@@ -17,6 +18,7 @@ buildscript {
 // Access Git info from build script
 plugins {
     id "org.ajoberstar.grgit" version "4.0.1"
+    id 'org.openjfx.javafxplugin' version '0.0.9'
 }
 
 // Apply the java plugin to add support for Java
@@ -49,17 +51,11 @@ ext {
     revision = head.abbreviatedId
     revisionFull = head.id
 
-    if (tags) {
-        tagVersion = tags.getName()
+    		     tagVersion = "1.7.0"
         msiVersion = tagVersion
         enviroment = "Production"
         sentryDSN = sentry_production_dsn
-    } else {
-        tagVersion = 'SNAPSHOT-' + revision
-        enviroment = "Development"
-        sentryDSN = sentry_development_dsn
-    }
-
+    
     // not doing anything as of a bug in grgit when opening with currentDir/dir
     // https://github.com/ajoberstar/grgit/issues/288
     grgit.close()
@@ -185,15 +181,15 @@ dependencies {
     implementation 'com.github.RPTools:maptool-resources:1.6.0'
     implementation 'com.github.RPTools:parser:1.5.5'
 
-    implementation 'jide-common:jide-common:3.2.3'
-    implementation 'jide-components:jide-components:3.2.3'
-    implementation 'jide-dialogs:jide-dialogs:3.2.3'
-    implementation 'jide-dock:jide-dock:3.2.3'
-    implementation 'jide-editor:jide-editor:3.2.3'
-    implementation 'jide-grids:jide-grids:3.2.3'
-    implementation 'jide-properties:jide-properties:3.2.3'
-    implementation 'jide-shortcut:jide-shortcut:3.2.3'
-
+    implementation group: 'com.jidesoft', name: 'jide-common', version: '3.7.9'
+    implementation group: 'com.jidesoft', name: 'jide-components', version: '3.7.9'
+    implementation group: 'com.jidesoft', name: 'jide-dialogs', version: '3.7.9'
+    implementation group: 'com.jidesoft', name: 'jide-dock', version: '3.7.9'
+    implementation group: 'com.jidesoft', name: 'jide-editor', version: '3.7.9'
+    implementation group: 'com.jidesoft', name: 'jide-grids', version: '3.7.9'
+    implementation group: 'com.jidesoft', name: 'jide-properties', version: '3.7.9'
+    implementation group: 'com.jidesoft', name: 'jide-shortcut', version: '3.7.9'
+    
     implementation 'org.eclipse.jetty:jetty-server:9.4.25.v20191220'
     implementation 'org.eclipse.jetty:jetty-servlet:9.4.25.v20191220'
     implementation 'org.eclipse.jetty:jetty-webapp:9.4.25.v20191220'
@@ -416,3 +412,10 @@ task createWrapper(type: Wrapper) {
 
 // Configure current release tag in Sentry.io properties
 processResources.dependsOn configSentryRelease
+
+
+
+javafx {
+    version = '14'
+    modules = [ 'javafx.controls', 'javafx.fxml', 'javafx.base', 'javafx.controls', 'javafx.media', 'javafx.swing', 'javafx.web', 'javafx.fxml', 'javafx.graphics' ]
+}
