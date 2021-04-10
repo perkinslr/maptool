@@ -64,7 +64,12 @@ public class JSScriptEngine {
   }
 
   public Object evalMacro(String macroBody, boolean trusted, Token token) {
-    return engine.eval(macroBody.toString(), anonymousContext);
+    try {
+      return engine.eval(macroBody.toString(), anonymousContext);
+    }
+    catch (ScriptException e) {
+      return ""+e;
+    }
   }
 
   public Object evalAnonymous(String script) throws ScriptException {
