@@ -81,6 +81,7 @@ public class MacroManager {
     registerMacro(new TextureNoise());
     registerMacro(new VersionMacro());
     registerMacro(new AboutMacro());
+    registerMacro(new JavascriptMacro());
     registerMacro(UNDEFINED_MACRO);
   }
 

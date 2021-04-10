@@ -84,6 +84,7 @@ class OptionInfo {
     // code
     CODE("code", 0, 0),
     MACRO("macro", 1, 1),
+    JAVASCRIPT("js|javascript", 0, 0),
     // HTML Dockable Frame
     FRAME("frame", 1, 2, "\"\""),
     // HTML Dialog

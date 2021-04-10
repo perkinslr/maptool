@@ -14,6 +14,7 @@
  */
 package net.rptools.maptool.client;
 
+import net.rptools.maptool.client.script.javascript.*;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import java.math.BigDecimal;
@@ -117,6 +118,7 @@ public class MapToolLineParser {
     NO_CODE,
     MACRO,
     CODEBLOCK,
+    JAVASCRIPT,
   }
 
   private enum OutputLoc { // Mutually exclusive output location
@@ -544,6 +546,9 @@ public class MapToolLineParser {
                 case CODE:
                   codeType = CodeType.CODEBLOCK;
                   break;
+                case JAVASCRIPT:
+                  codeType = CodeType.JAVASCRIPT;
+                  break;
                   ///////////////////////////////////////////////////
                   // MISC OPTIONS
                   ///////////////////////////////////////////////////
@@ -716,6 +721,11 @@ public class MapToolLineParser {
                  */
               case NO_BRANCH:
                 {
+                  if (codeType == CodeType.JAVASCRIPT) {
+                    rollBranch = findEndOfRoll(roll);
+                    break;
+                  }
+                  
                   // There's only one branch, so our regex is very simple
                   String testRegex = String.format("^\\s*%s\\s*$", branchRegex);
                   Matcher testMatcher = Pattern.compile(testRegex).matcher(roll);
@@ -916,6 +926,15 @@ public class MapToolLineParser {
                 }
                 resolver.setVariable(
                     "roll.count", iteration); // reset this because called code might change it
+                break;
+              case JAVASCRIPT:
+                output_text = runJavascriptBlock(resolver, tokenInContext, rollBranch);
+                resolver.setVariable(
+                    "roll.count", iteration); // reset this because called code might change it
+                if (output != Output.NONE) {
+                  expressionBuilder.append(output_text);
+                }
+                
                 break;
 
               case CODEBLOCK:
@@ -1323,6 +1342,12 @@ public class MapToolLineParser {
     return true;
   }
 
+
+  String runJavascriptBlock(MapToolVariableResolver resolver, Token tokenInContext, String macroBody)
+      throws ParserException {
+    return "" + JSScriptEngine.getJSScriptEngine().evalMacro(macroBody, false, tokenInContext);
+  }
+  
   /**
    * Run a block of text as a macro.
    *
@@ -1826,5 +1851,47 @@ public class MapToolLineParser {
     newRolls.clear();
     lastRolled.clear();
     rolled.clear();
+  }
+
+  private String findEndOfRoll(String roll) {
+    int brackets = 1;
+    boolean squotes = false;
+    boolean dquotes = false;
+    
+    int len = roll.length();
+    for (int idx=0; idx < len; idx++) {
+      char c = roll.charAt(idx);
+      switch (c) {
+      case '[':
+        if (!squotes && !dquotes) {
+          brackets++;
+        }
+        break;
+      
+      case '\'':
+        if (!dquotes) {
+          squotes = !squotes;
+        }
+        break;
+      case '"':
+        if (!squotes) {
+          dquotes = !dquotes;
+        }
+        break;
+
+      case ']':
+        if (!squotes && !dquotes) {
+          brackets--;
+        }
+        break;
+      default:
+        break;
+        
+      }
+      if (brackets == 0) {
+        return roll.substring(0, idx);
+      }
+    } 
+    return roll;
   }
 }
