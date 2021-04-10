@@ -41,15 +41,19 @@ public class JSScriptEngine {
   private JSScriptEngine() {
     engine = new ScriptEngineManager().getEngineByName("graal.js");
 
-    anonymousContext = new SimpleScriptContext();
-    anonymousContext.setBindings(engine.createBindings(), ScriptContext.ENGINE_SCOPE);
+    anonymousContext = getContext();
+  }
+
+  private ScriptContext getContext() {
+    ScriptContext newContext = new SimpleScriptContext();
+    newContext.setBindings(engine.createBindings(), ScriptContext.ENGINE_SCOPE);
     Reflections reflections = new Reflections("net.rptools.maptool.client.script.javascript.api");
     Set<Class<?>> annotated = reflections.getTypesAnnotatedWith(MapToolJSAPIDefinition.class);
 
     for (Class<?> apiClass : annotated) {
       try {
         if (MapToolJSAPIInterface.class.isAssignableFrom(apiClass)) {
-          registerAPIObject(anonymousContext, (MapToolJSAPIInterface) apiClass.newInstance());
+          registerAPIObject(newContext, (MapToolJSAPIInterface) apiClass.newInstance());
         } else {
           log.error("Could not add API object " + apiClass.getName() + " (missing interface)");
         }
@@ -57,6 +61,7 @@ public class JSScriptEngine {
         log.error("Could not add API object " + apiClass.getName(), e);
       }
     }
+    return newContext;
   }
 
   public static JSScriptEngine getJSScriptEngine() {
@@ -65,7 +70,7 @@ public class JSScriptEngine {
 
   public Object evalMacro(String macroBody, boolean trusted, Token token) {
     try {
-      return engine.eval(macroBody.toString(), anonymousContext);
+      return engine.eval(macroBody.toString(), getContext());
     }
     catch (ScriptException e) {
       return ""+e;
@@ -79,6 +84,6 @@ public class JSScriptEngine {
         .append("(function() { var args = MTScript.getMTScriptCallingArgs(); ")
         .append(script)
         .append("})();");
-    return engine.eval(wrapped.toString(), anonymousContext);
+    return engine.eval(wrapped.toString(), getContext());
   }
 }
