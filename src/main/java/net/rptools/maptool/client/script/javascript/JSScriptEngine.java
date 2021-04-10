@@ -21,6 +21,8 @@ import net.rptools.maptool.client.script.javascript.api.MapToolJSAPIInterface;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.reflections.Reflections;
+import net.rptools.maptool.model.Token;
+
 
 public class JSScriptEngine {
 
@@ -59,6 +61,10 @@ public class JSScriptEngine {
 
   public static JSScriptEngine getJSScriptEngine() {
     return jsScriptEngine;
+  }
+
+  public Object evalMacro(String macroBody, boolean trusted, Token token) {
+    return engine.eval(macroBody.toString(), anonymousContext);
   }
 
   public Object evalAnonymous(String script) throws ScriptException {
