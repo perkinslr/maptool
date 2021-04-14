@@ -18,9 +18,9 @@ import net.rptools.maptool.client.MapTool;
 import net.rptools.maptool.client.MapToolMacroContext;
 import net.rptools.maptool.client.macro.MacroContext;
 import net.rptools.maptool.client.macro.MacroDefinition;
+import net.rptools.maptool.client.script.javascript.*;
 import net.rptools.maptool.language.I18N;
 import net.rptools.maptool.model.TextMessage;
-import net.rptools.maptool.client.script.javascript.*;
 
 @MacroDefinition(
     name = "javascript",
@@ -28,8 +28,14 @@ import net.rptools.maptool.client.script.javascript.*;
     description = "javascript.description")
 public class JavascriptMacro extends AbstractMacro {
   public void execute(MacroContext context, String macro, MapToolMacroContext executionContext) {
-    System.out.println("macro: '"+macro+"'");
-    String result = "" + JSScriptEngine.getJSScriptEngine().evalMacro(macro, false, null);
+    if (MapTool.getFrame()
+        .getCommandPanel()
+        .fromMacroButton) { // /js does nothing if not called directly from the command panel
+      return;
+    }
+    macro = macro.replace("\\{", "{").replace("\\}", "}");
+    String result =
+        "" + JSScriptEngine.getJSScriptEngine().evalMacro(macro, MapTool.getPlayer().isGM(), null);
     if (result != null) {
       MapTool.addMessage(
           new TextMessage(

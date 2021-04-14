@@ -103,6 +103,8 @@ public class CommandPanel extends JPanel
   private JButton emotePopupButton;
   private String typedCommandBuffer;
 
+  public boolean fromMacroButton = true;
+
   // Chat timers
   // private long chatNotifyDuration; // Initialize it on first load
   // private Timer chatTimer;
@@ -708,6 +710,9 @@ public class CommandPanel extends JPanel
     if (text.length() == 0) {
       return;
     }
+
+    fromMacroButton = macroContext != null;
+
     // Command history
     // Don't store up a bunch of repeats
     if (commandHistory.size() == 0 || !text.equals(commandHistory.get(commandHistory.size() - 1))) {

@@ -17,8 +17,10 @@ package net.rptools.maptool.client.script.javascript.api;
 import java.util.ArrayList;
 import java.util.List;
 import net.rptools.maptool.client.MapTool;
+import net.rptools.maptool.model.Token;
 import org.graalvm.polyglot.HostAccess;
 
+@MapToolJSAPIDefinition(javaScriptVariableName = "MTTokens")
 public class JSAPITokens {
 
   @HostAccess.Export
@@ -31,5 +33,15 @@ public class JSAPITokens {
         .getTokens()
         .forEach(t -> tokens.add(new JSAPIToken(t)));
     return new JSList(tokens);
+  }
+
+  @HostAccess.Export
+  public List<JSAPIToken> getSelectedTokens() {
+    List<Token> tokens = MapTool.getFrame().getCurrentZoneRenderer().getSelectedTokensList();
+    List<JSAPIToken> out_tokens = new ArrayList<JSAPIToken>();
+    for (Token token : tokens) {
+      out_tokens.add(new JSAPIToken(token));
+    }
+    return out_tokens;
   }
 }

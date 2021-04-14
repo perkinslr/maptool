@@ -21,6 +21,7 @@ import net.rptools.maptool.model.drawing.AbstractDrawing;
 import net.rptools.maptool.model.drawing.DrawnElement;
 import org.graalvm.polyglot.*;
 
+@MapToolJSAPIDefinition(javaScriptVariableName = "MTDrawing")
 public class JSAPIDrawing {
   @HostAccess.Export public final AbstractDrawing drawing;
 

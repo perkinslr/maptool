@@ -98,10 +98,12 @@ public class JSAPIToken {
   @HostAccess.Export
   public void setX(int x) {
     this.token.setX(x);
+    MapTool.serverCommand().updateTokenProperty(token, Token.Update.setXY, x, token.getY());
   }
 
   @HostAccess.Export
   public void setY(int y) {
     this.token.setY(y);
+    MapTool.serverCommand().updateTokenProperty(token, Token.Update.setXY, token.getX(), y);
   }
 }

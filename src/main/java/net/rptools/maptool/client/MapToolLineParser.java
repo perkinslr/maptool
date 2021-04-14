@@ -14,7 +14,6 @@
  */
 package net.rptools.maptool.client;
 
-import net.rptools.maptool.client.script.javascript.*;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import java.math.BigDecimal;
@@ -27,6 +26,7 @@ import net.rptools.maptool.client.functions.AbortFunction.AbortFunctionException
 import net.rptools.maptool.client.functions.AssertFunction.AssertFunctionException;
 import net.rptools.maptool.client.functions.ReturnFunction.ReturnFunctionException;
 import net.rptools.maptool.client.functions.json.JSONMacroFunctions;
+import net.rptools.maptool.client.script.javascript.*;
 import net.rptools.maptool.client.ui.htmlframe.HTMLFrameFactory;
 import net.rptools.maptool.client.ui.htmlframe.HTMLFrameFactory.FrameType;
 import net.rptools.maptool.client.ui.macrobuttons.buttons.MacroButtonPrefs;
@@ -291,6 +291,8 @@ public class MapToolLineParser {
         String frameName = null;
         String frameOpts = null;
 
+        String jsContext = null;
+
         if (match.getMatch().startsWith("[")) {
           opts = match.getOpt();
           roll = match.getRoll();
@@ -548,6 +550,9 @@ public class MapToolLineParser {
                   break;
                 case JAVASCRIPT:
                   codeType = CodeType.JAVASCRIPT;
+                  if (option.getParamCount() == 1) {
+                    jsContext = option.getStringParam(0);
+                  }
                   break;
                   ///////////////////////////////////////////////////
                   // MISC OPTIONS
@@ -725,7 +730,7 @@ public class MapToolLineParser {
                     rollBranch = findEndOfRoll(roll);
                     break;
                   }
-                  
+
                   // There's only one branch, so our regex is very simple
                   String testRegex = String.format("^\\s*%s\\s*$", branchRegex);
                   Matcher testMatcher = Pattern.compile(testRegex).matcher(roll);
@@ -928,13 +933,14 @@ public class MapToolLineParser {
                     "roll.count", iteration); // reset this because called code might change it
                 break;
               case JAVASCRIPT:
-                output_text = runJavascriptBlock(resolver, tokenInContext, rollBranch);
+                output_text =
+                    runJavascriptBlock(resolver, tokenInContext, rollBranch, context, jsContext);
                 resolver.setVariable(
                     "roll.count", iteration); // reset this because called code might change it
                 if (output != Output.NONE) {
                   expressionBuilder.append(output_text);
                 }
-                
+
                 break;
 
               case CODEBLOCK:
@@ -1342,12 +1348,27 @@ public class MapToolLineParser {
     return true;
   }
 
-
-  String runJavascriptBlock(MapToolVariableResolver resolver, Token tokenInContext, String macroBody)
+  String runJavascriptBlock(
+      MapToolVariableResolver resolver,
+      Token tokenInContext,
+      String macroBody,
+      MapToolMacroContext context,
+      String jsContext)
       throws ParserException {
-    return "" + JSScriptEngine.getJSScriptEngine().evalMacro(macroBody, false, tokenInContext);
+    boolean trusted = context.isTrusted();
+
+    for (MapToolMacroContext ctx : contextStack) {
+      if (!ctx.isTrusted()) {
+        trusted = false;
+        break;
+      }
+    }
+
+    return ""
+        + JSScriptEngine.getJSScriptEngine()
+            .evalMacro(macroBody, trusted, tokenInContext, jsContext);
   }
-  
+
   /**
    * Run a block of text as a macro.
    *
@@ -1857,41 +1878,46 @@ public class MapToolLineParser {
     int brackets = 1;
     boolean squotes = false;
     boolean dquotes = false;
-    
+
     int len = roll.length();
-    for (int idx=0; idx < len; idx++) {
+    for (int idx = 0; idx < len; idx++) {
       char c = roll.charAt(idx);
       switch (c) {
-      case '[':
-        if (!squotes && !dquotes) {
-          brackets++;
-        }
-        break;
-      
-      case '\'':
-        if (!dquotes) {
-          squotes = !squotes;
-        }
-        break;
-      case '"':
-        if (!squotes) {
-          dquotes = !dquotes;
-        }
-        break;
+        case '[':
+          if (!squotes && !dquotes) {
+            brackets++;
+          }
+          break;
 
-      case ']':
-        if (!squotes && !dquotes) {
-          brackets--;
-        }
-        break;
-      default:
-        break;
-        
+        case '\'':
+          if (!dquotes) {
+            squotes = !squotes;
+          }
+          break;
+        case '"':
+          if (!squotes) {
+            dquotes = !dquotes;
+          }
+          break;
+
+        case ']':
+          if (!squotes && !dquotes) {
+            brackets--;
+          }
+          break;
+        case '\\':
+          if (idx + 1 < len) {
+            idx++;
+            break;
+          }
+
+        default:
+          break;
       }
       if (brackets == 0) {
         return roll.substring(0, idx);
       }
-    } 
+    }
     return roll;
   }
 }

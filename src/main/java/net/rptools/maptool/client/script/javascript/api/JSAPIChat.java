@@ -19,6 +19,7 @@ import java.util.List;
 import net.rptools.maptool.client.MapTool;
 import org.graalvm.polyglot.HostAccess;
 
+@MapToolJSAPIDefinition(javaScriptVariableName = "MTChat")
 public class JSAPIChat {
   @HostAccess.Export
   public void broadcast(String message) {

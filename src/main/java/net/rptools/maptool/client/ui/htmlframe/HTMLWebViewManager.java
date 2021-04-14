@@ -165,6 +165,8 @@ public class HTMLWebViewManager {
           + " default-src asset: "
           + " https://code.jquery.com " // JQuery CDN
           + " https://cdn.jsdelivr.net " // JSDelivr CDN
+          + " https://en.wikipedia.org " // JSDelivr CDN
+          + " https://lp-programming.com " // JSDelivr CDN
           + " https://stackpath.bootstrapcdn.com " // Bootstrap CDN
           + " https://unpkg.com " // unpkg CDN
           + " https://cdnjs.cloudflare.com " // CloudFlare JS CDN

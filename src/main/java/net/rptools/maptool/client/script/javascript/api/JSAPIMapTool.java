@@ -22,12 +22,7 @@ import org.graalvm.polyglot.*;
 
 @MapToolJSAPIDefinition(javaScriptVariableName = "MapTool")
 public class JSAPIMapTool implements MapToolJSAPIInterface {
-
-  @HostAccess.Export public final JSAPIClientInfo clientInfo = new JSAPIClientInfo();
-
-  @HostAccess.Export public final JSAPIChat chat = new JSAPIChat();
-
-  @HostAccess.Export public final JSAPITokens tokens = new JSAPITokens();
+  @HostAccess.Export public JSAPIChat chat = new JSAPIChat();
 
   @HostAccess.Export
   public List<JSAPIToken> getSelectedTokens() {

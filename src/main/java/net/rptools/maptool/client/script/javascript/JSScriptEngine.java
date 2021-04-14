@@ -14,15 +14,14 @@
  */
 package net.rptools.maptool.client.script.javascript;
 
-import java.util.Set;
+import java.util.*;
 import javax.script.*;
 import net.rptools.maptool.client.script.javascript.api.MapToolJSAPIDefinition;
 import net.rptools.maptool.client.script.javascript.api.MapToolJSAPIInterface;
+import net.rptools.maptool.model.Token;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.reflections.Reflections;
-import net.rptools.maptool.model.Token;
-
 
 public class JSScriptEngine {
 
@@ -30,7 +29,8 @@ public class JSScriptEngine {
   private static final Logger log = LogManager.getLogger(JSScriptEngine.class);
 
   private ScriptEngine engine;
-  private ScriptContext anonymousContext;
+  private Map<String, ScriptContext> untrustedContext;
+  private Map<String, ScriptContext> trustedContext;
 
   private void registerAPIObject(ScriptContext context, MapToolJSAPIInterface apiObj) {
     MapToolJSAPIDefinition def = apiObj.getClass().getAnnotation(MapToolJSAPIDefinition.class);
@@ -41,7 +41,8 @@ public class JSScriptEngine {
   private JSScriptEngine() {
     engine = new ScriptEngineManager().getEngineByName("graal.js");
 
-    anonymousContext = getContext();
+    trustedContext = new HashMap<String, ScriptContext>();
+    untrustedContext = new HashMap<String, ScriptContext>();
   }
 
   private ScriptContext getContext() {
@@ -69,11 +70,32 @@ public class JSScriptEngine {
   }
 
   public Object evalMacro(String macroBody, boolean trusted, Token token) {
-    try {
-      return engine.eval(macroBody.toString(), getContext());
+    return evalMacro(macroBody, trusted, token, "/repl");
+  }
+
+  public Object evalMacro(String macroBody, boolean trusted, Token token, String jsContext) {
+    Map<String, ScriptContext> ctxMap;
+    if (trusted) {
+      ctxMap = trustedContext;
+    } else {
+      ctxMap = untrustedContext;
     }
-    catch (ScriptException e) {
-      return ""+e;
+
+    ScriptContext ctx;
+    if (jsContext == null) {
+      ctx = getContext();
+    } else {
+
+      if (!ctxMap.containsKey(jsContext)) {
+        ctxMap.put(jsContext, getContext());
+      }
+      ctx = ctxMap.get(jsContext);
+    }
+
+    try {
+      return engine.eval(macroBody.toString(), ctx);
+    } catch (ScriptException e) {
+      return "" + e;
     }
   }
 

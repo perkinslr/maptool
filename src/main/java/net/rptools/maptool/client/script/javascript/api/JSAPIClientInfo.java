@@ -23,6 +23,7 @@ import net.rptools.maptool.model.Token;
 import net.rptools.maptool.model.Zone;
 import org.graalvm.polyglot.HostAccess;
 
+@MapToolJSAPIDefinition(javaScriptVariableName = "MTClientInfo")
 public class JSAPIClientInfo {
   public boolean faceEdge() {
     return AppPreferences.getFaceEdge();
